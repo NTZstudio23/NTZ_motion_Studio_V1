@@ -1,0 +1,6 @@
+{
+  "name": "NTZ Motion Studio",
+  "description": "Studio animasi HTML5 Canvas dan motion graphics berbasis WebView dengan render video frame-by-frame.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

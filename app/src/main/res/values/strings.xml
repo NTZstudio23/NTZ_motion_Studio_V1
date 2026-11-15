@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">NTZ Motion Studio</string>
+    <string name="splash_brand_title">NTZ MOTION STUDIO V.1</string>
+    <string name="splash_subtitle">PRO CANVAS MOTION ENGINE</string>
+    <string name="splash_loading_init">Memulai NTZ Motion Studio…</string>
+    <string name="splash_loading_engine">Menyiapkan engine Canvas &amp; WebView…</string>
+    <string name="splash_loading_encoder">Mengkalibrasi encoder &amp; timeline…</string>
+    <string name="splash_loading_ready">Studio siap digunakan</string>
+    <string name="download_saved_msg">Tersimpan di Download: %1$s</string>
+    <string name="download_failed_msg">Gagal menyimpan file: %1$s</string>
+    <string name="action_share">Bagikan</string>
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Batal</string>
+    <string name="back_exit_prompt">Tekan kembali sekali lagi untuk keluar</string>
+    <string name="render_exit_warning_title">Render Sedang Berjalan</string>
+    <string name="render_exit_warning_msg">Proses render video masih berjalan. Yakin ingin keluar dari aplikasi?</string>
+    <string name="action_exit">Keluar</string>
+    <string name="action_stay">Tetap di Studio</string>
+</resources>
