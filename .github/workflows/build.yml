@@ -22,13 +22,18 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Set up Android SDK & install API 36.1
-        uses: android-actions/setup-android@v3
-
       - name: Accept Android SDK licenses & install required packages
+        shell: bash
         run: |
-          yes | sdkmanager --licenses > /dev/null 2>&1 || true
-          sdkmanager "platforms;android-36.1" "build-tools;36.0.0"
+          set +o pipefail
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          SDKMANAGER="$(find "$SDK_ROOT/cmdline-tools" -name sdkmanager -type f 2>/dev/null | sort -r | head -n 1)"
+          if [ -z "$SDKMANAGER" ]; then
+            SDKMANAGER="$(command -v sdkmanager)"
+          fi
+          echo "Using sdkmanager: $SDKMANAGER (SDK_ROOT=$SDK_ROOT)"
+          yes | "$SDKMANAGER" --sdk_root="$SDK_ROOT" --licenses > /dev/null 2>&1 || true
+          "$SDKMANAGER" --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-36.1" "build-tools;36.0.0"
 
       - name: Prepare debug keystore
         run: |
