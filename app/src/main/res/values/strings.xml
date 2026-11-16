@@ -9,6 +9,7 @@
     <string name="download_saved_msg">Tersimpan di Download: %1$s</string>
     <string name="download_failed_msg">Gagal menyimpan file: %1$s</string>
     <string name="action_share">Bagikan</string>
+    <string name="action_dismiss">Tutup notifikasi</string>
     <string name="action_ok">OK</string>
     <string name="action_cancel">Batal</string>
     <string name="back_exit_prompt">Tekan kembali sekali lagi untuk keluar</string>

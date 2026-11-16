@@ -27,11 +27,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,8 +34,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -48,8 +43,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.studio.BackActionResult
+import com.example.studio.DownloadBannerState
 import com.example.studio.JsDialogState
 import com.example.studio.MotionStudioWebView
+import com.example.studio.NtzDownloadBannerOverlay
 import com.example.studio.NtzFileSaver
 import com.example.studio.NtzSplashOverlay
 import com.example.studio.StudioWebController
@@ -63,7 +60,6 @@ import com.example.ui.theme.NtzNeonViolet
 import com.example.ui.theme.NtzSurface
 import com.example.ui.theme.NtzTextPrimary
 import com.example.ui.theme.NtzTextSecondary
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,18 +79,21 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MotionStudioApp() {
   val context = LocalContext.current
-  val scope = rememberCoroutineScope()
-  val snackbarHostState = remember { SnackbarHostState() }
   val webController = remember { StudioWebController() }
 
   var showSplash by remember { mutableStateOf(true) }
   var isWebReady by remember { mutableStateOf(false) }
   var jsDialog by remember { mutableStateOf<JsDialogState?>(null) }
+  var downloadBanner by remember { mutableStateOf<DownloadBannerState?>(null) }
   var showRenderExitDialog by remember { mutableStateOf(false) }
   var lastBackPressMs by remember { mutableLongStateOf(0L) }
 
   BackHandler(enabled = true) {
     if (showSplash) return@BackHandler
+    if (downloadBanner != null) {
+      downloadBanner = null
+      return@BackHandler
+    }
     webController.handleBack { action ->
       when (action) {
         BackActionResult.HANDLED -> Unit
@@ -121,42 +120,15 @@ fun MotionStudioApp() {
       modifier = Modifier.fillMaxSize(),
       containerColor = NtzDeepInk,
       contentWindowInsets = WindowInsets.safeDrawing,
-      snackbarHost = {
-        SnackbarHost(hostState = snackbarHostState) { data ->
-          Snackbar(
-            snackbarData = data,
-            containerColor = NtzSurface,
-            contentColor = NtzTextPrimary,
-            actionColor = NtzBrightCyan,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-          )
-        }
-      },
     ) { innerPadding ->
       MotionStudioWebView(
         controller = webController,
         onWebReady = { isWebReady = true },
         onFileSaved = { saved ->
-          scope.launch {
-            val res =
-              snackbarHostState.showSnackbar(
-                message = context.getString(R.string.download_saved_msg, saved.fileName),
-                actionLabel = context.getString(R.string.action_share),
-                duration = SnackbarDuration.Long,
-              )
-            if (res == SnackbarResult.ActionPerformed) {
-              runCatching { NtzFileSaver.shareOrOpenFile(context, saved) }
-            }
-          }
+          downloadBanner = DownloadBannerState.Success(saved = saved)
         },
         onSaveError = { errorMsg ->
-          scope.launch {
-            snackbarHostState.showSnackbar(
-              message = context.getString(R.string.download_failed_msg, errorMsg),
-              duration = SnackbarDuration.Long,
-            )
-          }
+          downloadBanner = DownloadBannerState.Error(message = errorMsg)
         },
         onJsDialog = { dialog ->
           jsDialog = dialog
@@ -164,6 +136,16 @@ fun MotionStudioApp() {
         modifier = Modifier.fillMaxSize().padding(innerPadding),
       )
     }
+
+    // Non-blocking top download banner (swipe or tap X to dismiss, auto-hides quickly)
+    NtzDownloadBannerOverlay(
+      banner = downloadBanner,
+      onShare = { saved ->
+        runCatching { NtzFileSaver.shareOrOpenFile(context, saved) }
+      },
+      onDismiss = { downloadBanner = null },
+      modifier = Modifier.align(Alignment.TopCenter),
+    )
 
     // 6-second intro splash screen displaying logo and "NTZ MOTION STUDIO V.1"
     NtzSplashOverlay(
